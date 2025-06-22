@@ -1,0 +1,39 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  OPENRESTY_VER: 1.27.1.2
+
+jobs:
+  run-test:
+    runs-on: ubuntu-latest
+    services:
+      nats:
+        image: nats:latest
+        ports:
+          - 4222:4222
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install OpenResty
+        run: |
+          wget https://openresty.org/download/openresty-$OPENRESTY_VER.tar.gz
+          tar -xzf openresty-$OPENRESTY_VER.tar.gz
+          cd openresty-$OPENRESTY_VER
+          ./configure --prefix=/usr/local/openresty-debug --with-debug
+          make -j4
+          sudo make install
+          sudo cpan Test::Nginx
+
+      - name: Run Test
+        run: |
+          PATH=$PATH:/usr/local/openresty-debug/bin TEST_NGINX_BINARY=openresty prove -I. -r t
