@@ -6,21 +6,26 @@ It can be used in cross-Nginx worker or cross-instance Pub/Sub patterns.
 
 ## Table of Contents
 
-- [lua-resty-nats-next](#lua-resty-nats-next)
-  - [Table of Contents](#table-of-contents)
-  - [Status](#status)
-  - [Synopsis](#synopsis)
-  - [Description](#description)
-  - [Methods](#methods)
-    - [connect](#connect)
-    - [subscribe](#subscribe)
-    - [unsubscribe](#unsubscribe)
-    - [publish](#publish)
-    - [start\_loop](#start_loop)
+- [Status](#status)
+- [Installation](#installation)
+- [Synopsis](#synopsis)
+- [Description](#description)
+- [Methods](#methods)
+  - [connect](#connect)
+  - [subscribe](#subscribe)
+  - [unsubscribe](#unsubscribe)
+  - [publish](#publish)
+  - [start\_loop](#start_loop)
 
 ## Status
 
 This library is now experimental. The most of the protocols in NATS core have been implemented.
+
+## Installation
+
+```shell
+luarocks install https://raw.githubusercontent.com/bzp2010/lua-resty-nats-next/refs/heads/main/rockspec/lua-resty-nats-next-main-0.rockspec
+```
 
 ## Synopsis
 
