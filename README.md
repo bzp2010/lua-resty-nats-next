@@ -131,6 +131,8 @@ if not ok then
 end
 ```
 
+[Back to TOC](#table-of-contents)
+
 ### unsubscribe
 
 **syntax:** *ok, err = client:unsubscribe(subject)*
@@ -150,6 +152,8 @@ if not ok then
   ngx.log(ngx.ERR, err)
 end
 ```
+
+[Back to TOC](#table-of-contents)
 
 ### publish
 
@@ -172,6 +176,8 @@ if not ok then
   ngx.log(ngx.ERR, err)
 end
 ```
+
+[Back to TOC](#table-of-contents)
 
 ### start_loop
 
@@ -211,3 +217,5 @@ Specifically, this loop is now concerned with 3 kinds of server messages:
       }
     }
     ```
+
+[Back to TOC](#table-of-contents)
