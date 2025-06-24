@@ -162,7 +162,7 @@ function _M.unsubscribe(self, subject)
     return false, "no such subscription found", false
   end
 
-  local bytes, err = self.sock:send(protocol_unsub.encode(subscriber_id, {}) .. "\r\n")
+  local bytes, err = self.sock:send(protocol_unsub.encode({ sid = subscriber_id }) .. "\r\n")
   if not bytes then
     local retryable = retryable_error(err)
     if err == "timeout" then
