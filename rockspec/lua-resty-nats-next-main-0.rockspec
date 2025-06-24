@@ -13,6 +13,7 @@ build = {
    modules = {
       ["resty.nats.auth"] = "lib/resty/nats/auth.lua",
       ["resty.nats.client"] = "lib/resty/nats/client.lua",
+      ["resty.nats.common"] = "lib/resty/nats/common.lua",
       ["resty.nats.protocols.connect"] = "lib/resty/nats/protocols/connect.lua",
       ["resty.nats.protocols.err"] = "lib/resty/nats/protocols/err.lua",
       ["resty.nats.protocols.hmsg"] = "lib/resty/nats/protocols/hmsg.lua",
@@ -21,6 +22,6 @@ build = {
       ["resty.nats.protocols.parser"] = "lib/resty/nats/protocols/parser.lua",
       ["resty.nats.protocols.pub"] = "lib/resty/nats/protocols/pub.lua",
       ["resty.nats.protocols.sub"] = "lib/resty/nats/protocols/sub.lua",
-      ["resty.nats.protocols.unsub"] = "lib/resty/nats/protocols/unsub.lua"
+      ["resty.nats.protocols.unsub"] = "lib/resty/nats/protocols/unsub.lua",
    }
 }
