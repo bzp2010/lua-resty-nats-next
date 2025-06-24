@@ -5,6 +5,8 @@ local thread_wait    = ngx.thread.wait
 local thread_kill    = ngx.thread.kill
 local worker_exiting = ngx.worker.exiting
 
+local common           = require("resty.nats.common")
+
 -- server-side messages
 local protocol_parser  = require("resty.nats.protocols.parser")
 local protocol_info    = require("resty.nats.protocols.info")
@@ -35,18 +37,45 @@ local function _handshake(self)
   if line:sub(1, 4) ~= "INFO" then
     return false, "expected INFO line, got: " .. line
   end
-  local server_info = protocol_info.decode(line) --TODO: handle server_info
+  local server_info = protocol_info.decode(line)
+  self.server_info.headers = server_info.headers
+
+  if self.socket_config.keepalive then
+    local count, err = self.sock:getreusedtimes()
+    if not count and err then
+      self.sock:close()
+      return false, "failed to get connection reused times: " .. err
+    end
+
+    -- skip the TLS handshake and NATS handshake on reused connections
+    if count > 0 then
+      ngx.log(ngx.DEBUG, "reuse NATS connection, count: ", count)
+      return true
+    end
+  end
+
+  if self.socket_config.ssl and server_info and server_info.tls_required then
+    local _, err = self.sock:sslhandshake(false, nil, self.socket_config.ssl_verify)
+    if err then
+      self.sock:close()
+      return false, "failed to perform SSL handshake: " .. err
+    end
+  end
 
   local connect_msg = {
     verbose = false,
     pedantic = true,
-    tls_required = false,
+    tls_required = self.socket_config.ssl,
     name = "lua-resty-nats-next",
     lang = "lua",
-    version = "1.0.0",
-    headers = true,
+    version = common.VERSION,
+    headers = server_info.headers,
   }
-  local bytes, err = self.sock:send(protocol_connect.encode(connect_msg, { auth = self.auth_config }) .. "\r\n")
+  for key, value in pairs(self.auth_config) do
+    connect_msg[key] = value
+  end
+
+  local bytes, err = self.sock:send(protocol_connect.encode(connect_msg) .. "\r\n")
   if not bytes then
     return false, "failed to send connect message: " .. err
   end
@@ -72,7 +101,11 @@ function _M.connect(opts)
 
   sock:settimeout(socket_config.timeout)
 
-  local ok, err = sock:connect(opts.host, opts.port, { pool = socket_config.keepalive_pool })
+  local ok, err = sock:connect(opts.host, opts.port, {
+    pool = socket_config.keepalive_pool,
+    pool_size = socket_config.keepalive_size,
+    backlog = 0 -- disable backlog, ref: https://github.com/openresty/lua-nginx-module/blob/edd1b6a/src/ngx_http_lua_socket_tcp.c#L578
+  })
   if not ok then
     return nil, err, true
   end
@@ -81,6 +114,7 @@ function _M.connect(opts)
     host = opts.host,
     port = opts.port,
     sock = sock,
+    server_info = { headers = true },
     auth_config = opts.auth_config or {},
     socket_config = socket_config,
     closing = false,
@@ -233,7 +267,7 @@ function _M.close(self)
     ---@type tcpsock
     local sock = self.sock
     if self.socket_config.keepalive and not worker_exiting() then
-      local ok, err = sock:setkeepalive(self.socket_config.keepalive_timeout, self.socket_config.keepalive_size)
+      local ok, err = sock:setkeepalive(self.socket_config.keepalive_timeout)
       if not ok then
         sock:close()
         return "failed to keep connection: " .. err
